@@ -21,6 +21,19 @@ struct LaserScan {
   std::vector<TimedPoint> data;
 };
 
+struct GridCell {
+  Point normal_vector;
+  Point mean;
+  std::vector<Point> point_list;
+  uint8_t depth{0};
+  GridCell* child_cell_list[4];
+};
+
+struct GridMap {
+  int id{-1};
+  std::unordered_map<uint64_t, GridCell> grid_cell_list;
+};
+
 }  // namespace bridge
 }  // namespace grid_odometer
 

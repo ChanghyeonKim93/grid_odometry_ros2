@@ -8,7 +8,9 @@
 
 namespace grid_odometer {
 
-struct Parameters {};
+struct Parameters {
+  double grid_resolution{0.5};  // [m]
+};
 
 class GridOdometer {
  public:
@@ -16,8 +18,14 @@ class GridOdometer {
 
   void Update(const bridge::LaserScan& bridge_laser_scan);
 
+  bridge::GridMap GetGridMap() const;
+
  private:
+  uint64_t ComputeGridKey(const Point point);
+
   const Parameters parameters_;
+
+  GridMap grid_map_;
 };
 
 }  // namespace grid_odometer
