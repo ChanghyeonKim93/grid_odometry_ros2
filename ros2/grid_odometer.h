@@ -17,6 +17,7 @@
 
 using LaserScanMsg = sensor_msgs::msg::LaserScan;
 using PointCloud2Msg = sensor_msgs::msg::PointCloud2;
+using PathMsg = nav_msgs::msg::Path;
 
 namespace grid_odometer {
 
@@ -25,16 +26,17 @@ class GridOdometerRos2 : public rclcpp::Node {
   GridOdometerRos2(const std::string& node_name) : Node(node_name) {
     // Load parameters
     Parameters parameters;
+    parameters.grid_resolution = 0.5;
 
     grid_odometer_ = std::make_unique<GridOdometer>(parameters);
 
-    // subscribers
+    // Subscribers
     laser_scan_subscriber_ = this->create_subscription<LaserScanMsg>(
         "/scan", rclcpp::SensorDataQoS(),
         std::bind(&GridOdometerRos2::CallbackLaserScan, this,
                   std::placeholders::_1));
 
-    // publishers
+    // Publishers
     pose_list_publisher_ = this->create_publisher<nav_msgs::msg::Path>(
         "~/pose_list", rclcpp::SensorDataQoS());
     point_cloud_publisher_ = this->create_publisher<PointCloud2Msg>(
@@ -43,17 +45,16 @@ class GridOdometerRos2 : public rclcpp::Node {
 
  private:
   void CallbackLaserScan(const LaserScanMsg::SharedPtr msg) {
-    std::cerr << "]fff" << std::endl;
     grid_odometer_->Update(ConvertToBridge(*msg));
 
     const auto bridge_grid_map = grid_odometer_->GetGridMap();
     std::vector<bridge::Point> point_list;
-    for (const auto& [key, grid_cell] : bridge_grid_map.grid_cell_list) {
+    for (const auto& [key, grid_cell] : bridge_grid_map.grid_cell_list)
       point_list.push_back(grid_cell.mean);
-    }
+
     std::cerr << "point_list.size() : " << point_list.size() << std::endl;
 
-    // point_cloud_publisher_->publish(ConvertToPointCloud2(point_list, "map"));
+    point_cloud_publisher_->publish(ConvertToPointCloud2(point_list, "map"));
   }
 
   bridge::LaserScan ConvertToBridge(const LaserScanMsg& msg) {
@@ -93,19 +94,19 @@ class GridOdometerRos2 : public rclcpp::Node {
     dst.width = point_list.size();
     dst.height = 1;
 
-    sensor_msgs::msg::PointField f_tmp;
-    f_tmp.offset = 0;
-    f_tmp.name = "x";
-    f_tmp.datatype = sensor_msgs::msg::PointField::FLOAT32;
-    dst.fields.push_back(f_tmp);
-    f_tmp.offset = 4;
-    f_tmp.name = "y";
-    f_tmp.datatype = sensor_msgs::msg::PointField::FLOAT32;
-    dst.fields.push_back(f_tmp);
-    f_tmp.offset = 8;
-    f_tmp.name = "z";
-    f_tmp.datatype = sensor_msgs::msg::PointField::FLOAT32;
-    dst.fields.push_back(f_tmp);
+    sensor_msgs::msg::PointField point_field;
+    point_field.offset = 0;
+    point_field.name = "x";
+    point_field.datatype = sensor_msgs::msg::PointField::FLOAT32;
+    dst.fields.push_back(point_field);
+    point_field.offset = 4;
+    point_field.name = "y";
+    point_field.datatype = sensor_msgs::msg::PointField::FLOAT32;
+    dst.fields.push_back(point_field);
+    point_field.offset = 8;
+    point_field.name = "z";
+    point_field.datatype = sensor_msgs::msg::PointField::FLOAT32;
+    dst.fields.push_back(point_field);
     // f_tmp.offset = 12;
     // f_tmp.name = "intensity";
     // f_tmp.datatype = sensor_msgs::msg::PointField::FLOAT32;
@@ -119,6 +120,7 @@ class GridOdometerRos2 : public rclcpp::Node {
     // f_tmp.datatype = sensor_msgs::msg::PointField::FLOAT32;
     // dst.fields.push_back(f_tmp);
     // dst.point_step = 22;  // x 4 + y 4 + z 4 + i 4 + r 2 + t 4
+    dst.point_step = 12;  // x 4 y 4 z 4
 
     dst.data.resize(dst.point_step * dst.width);
     for (size_t i = 0; i < dst.width; ++i) {

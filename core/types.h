@@ -11,6 +11,9 @@ namespace grid_odometer {
 
 using Point = Eigen::Vector2d;
 
+using Vec2 = Eigen::Vector2d;
+using Mat2x2 = Eigen::Matrix2d;
+
 struct TimedPoint {
   double time{0.0};
   Point point{Point::Zero()};
@@ -21,24 +24,23 @@ struct LaserScan {
   std::vector<TimedPoint> data;
 };
 
-struct Pose {
-  double x{0.0};
-  double y{0.0};
-  double angle{0.0};
-};
+using Pose = Eigen::Isometry2d;
 
 struct GridCell {
-  Eigen::Vector2d normal_vector{Eigen::Vector2d::Zero()};
-  Eigen::Vector2d mean{Eigen::Vector2d::Zero()};
-  std::deque<Point> point_list;
+  Vec2 normal_vector{Vec2::Zero()};
+  Vec2 mean{Vec2::Zero()};
+  Mat2x2 moment{Mat2x2::Zero()};
+
+  std::unordered_map<uint64_t, std::vector<Point>> point_list_per_pose;
+
   uint8_t depth{0};
-  GridCell* child_cell_list[4];
+  GridCell* child_cell_list[4] = {nullptr};
 };
 
 struct GridMap {
   int id{-1};
-  Pose pose;
-  std::unordered_map<uint64_t, GridCell> grid_cell_list;
+  Pose pose{Pose::Identity()};
+  std::unordered_map<uint64_t, GridCell> cell_list;
 };
 
 }  // namespace grid_odometer
