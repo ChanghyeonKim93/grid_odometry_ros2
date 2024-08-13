@@ -27,20 +27,42 @@ struct LaserScan {
 using Pose = Eigen::Isometry2d;
 
 struct GridCell {
-  Vec2 normal_vector{Vec2::Zero()};
-  Vec2 mean{Vec2::Zero()};
-  Mat2x2 moment{Mat2x2::Zero()};
+  // Vec2 normal_vector{Vec2::Zero()};
+  // Vec2 mean{Vec2::Zero()};
+  // Mat2x2 moment{Mat2x2::Zero()};
 
-  std::unordered_map<uint64_t, std::vector<Point>> point_list_per_pose;
-
-  uint8_t depth{0};
-  GridCell* child_cell_list[4] = {nullptr};
+  int hit_count{100};
 };
 
 struct GridMap {
   int id{-1};
   Pose pose{Pose::Identity()};
-  std::unordered_map<uint64_t, GridCell> cell_list;
+  std::vector<GridCell> cell_list;
+
+  Eigen::Vector2i origin{Eigen::Vector2i::Zero()};
+  int width{1};
+  int height{1};
+  double resolution{0.0};
+};
+
+struct Quad {
+  std::vector<int> point_index_list;
+  const std::vector<Point>* point_list_ptr = nullptr;
+  Quad* child_list[4] = {nullptr};
+
+  Quad(const std::vector<Point>* point_list_ptr_)
+      : point_list_ptr(point_list_ptr_) {}
+};
+
+struct QuadBase {
+  std::vector<Point> point_list;
+  Quad* root = nullptr;
+};
+
+struct QuadMap {
+  int id{-1};
+  Pose pose{Pose::Identity()};
+  std::unordered_map<uint64_t, QuadBase> quad_base_list;
 };
 
 }  // namespace grid_odometer

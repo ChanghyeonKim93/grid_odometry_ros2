@@ -19,6 +19,6 @@ set(SRC ${SRC})
 
 add_executable(grid_odometer_node grid_odometer_node.cc ${SRC})
 target_link_libraries(grid_odometer_node grid_odometer_core ${Eigen3_LIBRARIES} ) # grid_odometer
-ament_target_dependencies(grid_odometer_node rclcpp sensor_msgs nav_msgs)
+ament_target_dependencies(grid_odometer_node rclcpp sensor_msgs nav_msgs tf2_ros)
 install(TARGETS grid_odometer_node
   DESTINATION lib/${CMAKE_PROJECT_NAME}) # install executable

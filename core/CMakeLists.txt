@@ -14,6 +14,7 @@ include_directories(${CERES_INCLUDE_DIRS})
 
 set(SRC ${SRC}
   grid_odometer.cc
+  grid_map_updater.cc
 )
 
 add_library(${CMAKE_PROJECT_NAME}_core STATIC ${SRC})
