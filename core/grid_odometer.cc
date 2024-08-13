@@ -22,10 +22,9 @@ void GridOdometer::Update(
   // Estimate current pose
 
   // Update grid map
-  const auto point_list = ConvertToPointList(bridge_timed_point_cloud.data);
-  std::cerr << "point list size: " << point_list.size() << std::endl;
-  grid_map_updater_->UpdateGridMap(Pose::Identity(), point_list,
-                                   &current_grid_map_);
+  grid_map_updater_->UpdateGridMap(
+      Pose::Identity(), ConvertToPointList(bridge_timed_point_cloud.data),
+      &current_grid_map_);
 
   // If motion is large, update cells by current points
 }

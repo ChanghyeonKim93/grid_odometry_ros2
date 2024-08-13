@@ -22,7 +22,7 @@ void GridMapUpdater::UpdateGridMap(
     const Point hit_point = pose_in_reference * local_point;
     const auto hit_cell_index = ComputeGridCellIndex(hit_point, *grid_map);
     // Update hit
-    cell_list.at(hit_cell_index).hit_count++;
+    cell_list.at(hit_cell_index).hit_count += 10;
     if (cell_list.at(hit_cell_index).hit_count > 100)
       cell_list.at(hit_cell_index).hit_count = 100;
 
@@ -31,7 +31,7 @@ void GridMapUpdater::UpdateGridMap(
     for (const auto& miss_point : miss_point_list) {
       const auto miss_cell_index = ComputeGridCellIndex(miss_point, *grid_map);
 
-      cell_list.at(miss_cell_index).hit_count--;
+      cell_list.at(miss_cell_index).hit_count -= 20;
       if (cell_list.at(miss_cell_index).hit_count < 0)
         cell_list.at(miss_cell_index).hit_count = 0;
     }
@@ -65,8 +65,7 @@ void GridMapUpdater::ExtendGridMap(const Pose& pose_in_grid_map,
   int new_height = max_v - min_v + 1;
   int new_width = max_u - min_u + 1;
 
-  std::vector<GridCell> new_cell_list;
-  new_cell_list.resize(new_height * new_width);
+  std::vector<GridCell> new_cell_list{new_height * new_width, {-1}};
   for (size_t index = 0; index < grid_map->cell_list.size(); ++index) {
     const auto& cell = grid_map->cell_list.at(index);
     const int v = std::floor(index / grid_map->width);
@@ -83,8 +82,9 @@ void GridMapUpdater::ExtendGridMap(const Pose& pose_in_grid_map,
 
 std::vector<Point> GridMapUpdater::GenerateRayPointList(const Point& p0,
                                                         const Point& p1) {
-  const double grid_size = parameters_.resolution;
+  const double grid_size = parameters_.resolution * 0.9999;
 
+  constexpr double kEpsilon = 1e-5;
   const double x0 = p0.x(), y0 = p0.y();
   const double x1 = p1.x(), y1 = p1.y();
   const double dx = x1 - x0, dy = y1 - y0;
@@ -94,12 +94,12 @@ std::vector<Point> GridMapUpdater::GenerateRayPointList(const Point& p0,
   if (std::abs(dx) >= std::abs(dy)) {
     const double dydx = dy / dx;
     if (dx > 0.0) {
-      for (double x = x0; x <= x1; x += grid_size * 0.999) {
+      for (double x = x0; x <= x1; x += grid_size) {
         const double y = dydx * (x - x0) + y0;
         ray_point_list.emplace_back(x, y);
       }
     } else {
-      for (double x = x0; x >= x1; x -= grid_size * 0.999) {
+      for (double x = x0; x >= x1; x -= grid_size) {
         const double y = dydx * (x - x0) + y0;
         ray_point_list.emplace_back(x, y);
       }
@@ -107,12 +107,12 @@ std::vector<Point> GridMapUpdater::GenerateRayPointList(const Point& p0,
   } else {
     const double dxdy = dx / dy;
     if (dy > 0.0) {
-      for (double y = y0; y <= y1; y += grid_size * 0.999) {
+      for (double y = y0; y <= y1; y += grid_size) {
         const double x = dxdy * (y - y0) + x0;
         ray_point_list.emplace_back(x, y);
       }
     } else {
-      for (double y = y0; y >= y1; y -= grid_size * 0.999) {
+      for (double y = y0; y >= y1; y -= grid_size) {
         const double x = dxdy * (y - y0) + x0;
         ray_point_list.emplace_back(x, y);
       }

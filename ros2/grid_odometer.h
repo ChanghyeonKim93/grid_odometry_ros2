@@ -32,7 +32,7 @@ class GridOdometerRos2 : public rclcpp::Node {
   GridOdometerRos2(const std::string& node_name) : Node(node_name) {
     // Load parameters
     Parameters parameters;
-    parameters.grid_map_updater.resolution = 0.1;
+    parameters.grid_map_updater.resolution = 0.05;
 
     grid_odometer_ = std::make_unique<GridOdometer>(parameters);
 

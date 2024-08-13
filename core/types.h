@@ -30,8 +30,7 @@ struct GridCell {
   // Vec2 normal_vector{Vec2::Zero()};
   // Vec2 mean{Vec2::Zero()};
   // Mat2x2 moment{Mat2x2::Zero()};
-
-  int hit_count{100};
+  int8_t hit_count{-1};
 };
 
 struct GridMap {

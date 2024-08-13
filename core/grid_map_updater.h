@@ -7,7 +7,7 @@ namespace grid_odometer {
 namespace grid_map_updater {
 
 struct Parameters {
-  double resolution{0.05};
+  double resolution{0.1};
 };
 
 class GridMapUpdater {
@@ -17,6 +17,7 @@ class GridMapUpdater {
   void UpdateGridMap(const Pose& pose_in_grid_map,
                      const std::vector<Point>& local_point_list,
                      GridMap* grid_map);
+
   void ExtendGridMap(const Pose& pose_in_grid_map,
                      const std::vector<Point>& local_point_list,
                      GridMap* grid_map);
