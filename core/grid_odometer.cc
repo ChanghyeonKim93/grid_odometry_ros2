@@ -21,6 +21,8 @@ void GridOdometer::Update(
 
   // Estimate current pose
 
+  // Check the motion is big enough or not
+
   // Update grid map
   grid_map_updater_->UpdateGridMap(
       Pose::Identity(), ConvertToPointList(bridge_timed_point_cloud.data),

@@ -20,6 +20,7 @@ find_package(nav_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 
 add_subdirectory(core)
+add_subdirectory(test)
 add_subdirectory(ros2)
 
 ament_package()

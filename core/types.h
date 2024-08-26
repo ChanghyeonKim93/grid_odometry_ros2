@@ -44,17 +44,24 @@ struct GridMap {
   double resolution{0.0};
 };
 
+// For quad map
 struct Quad {
+  Point left_bottom;
+  Point right_top;
+  const std::deque<Point>* point_list_ptr = nullptr;
   std::vector<int> point_index_list;
-  const std::vector<Point>* point_list_ptr = nullptr;
   Quad* child_list[4] = {nullptr};
+  int8_t depth{-1};
 
-  Quad(const std::vector<Point>* point_list_ptr_)
+  Point mean;
+  Vec2 direction;
+
+  Quad(const std::deque<Point>* point_list_ptr_)
       : point_list_ptr(point_list_ptr_) {}
 };
 
 struct QuadBase {
-  std::vector<Point> point_list;
+  std::deque<Point> point_list;
   Quad* root = nullptr;
 };
 
