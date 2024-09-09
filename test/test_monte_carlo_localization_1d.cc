@@ -16,16 +16,16 @@ const int image_height{400};
 const int image_width{1600};
 
 const double map_range[2] = {0.0, 30.0};
-const double observation_range[2] = {-20.0, 20.0};
-constexpr double kPoseStep{0.05};
-constexpr double kPoseStart{7.1};
-constexpr double kPoseEnd{12.45};
-constexpr double kOdometryPositionNoiseStd{0.02};
+const double observation_range[2] = {-15.0, 15.0};
+constexpr double kPoseStep{0.1};
+constexpr double kPoseStart{15.1};
+constexpr double kPoseEnd{25.45};
+constexpr double kOdometryPositionNoiseStd{0.05};
 
 struct Parameters {
-  double resolution{0.02};
-  int max_num_particles{2000};
-  int min_count{3};
+  double resolution{0.05};
+  int max_num_particles{1000};
+  int min_count{1};
   int max_iterations{100};
 };
 
@@ -70,6 +70,7 @@ int main(int argc, char** argv) {
   std::vector<Pose> true_pose_list;
   for (double x = kPoseStart; x <= kPoseEnd; x += kPoseStep)
     true_pose_list.push_back(x);
+
   std::vector<Pose> odometry_pose_list;
   odometry_pose_list.push_back(true_pose_list.front());
   for (size_t index = 1; index < true_pose_list.size(); ++index) {
@@ -96,14 +97,13 @@ int main(int argc, char** argv) {
       InitializeParticleList(parameters.max_num_particles, &particle_list);
       const auto estimated_pose =
           Localize(grid_map, observation_list, &particle_list);
-      std::cerr << "True pose: " << true_pose_list.at(pose_index) << std::endl;
-      std::cerr << "Estimated pose: " << estimated_pose << std::endl;
       continue;
     }
 
-    const Pose pose_delta =
-        true_pose_list.at(pose_index) - true_pose_list.at(pose_index - 1);
-    WarpParticlesWithNoise(pose_delta, 0.05, &particle_list);
+    const Pose pose_delta = odometry_pose_list.at(pose_index) -
+                            odometry_pose_list.at(pose_index - 1);
+    WarpParticlesWithNoise(pose_delta, kOdometryPositionNoiseStd,
+                           &particle_list);
     const auto estimated_pose =
         Localize(grid_map, observation_list, &particle_list);
     std::cerr << "True pose: " << true_pose_list.at(pose_index) << std::endl;
@@ -123,11 +123,11 @@ int ComputeGridMapIndex(const Position world_position,
 GridMap GenerateGridMap() {
   GridMap grid_map;
   double range[6][2] =  //
-      {{0.41, 4.23},    //
-       {5.10, 5.56},    //
-       {7.2, 9.5},      //
+      {{2.41, 2.5},     //
+       {5.10, 6.56},    //
+       {7.2, 9.1},      //
        {10.41, 12.23},  //
-       {15.11, 17.41},  //
+       {16.11, 16.41},  //
        {25.11, 29.41}};
 
   grid_map.resize(
@@ -147,13 +147,13 @@ std::vector<std::vector<Position>> GenerateObservationList(
   for (size_t pose_index = 0; pose_index < pose_list.size(); ++pose_index) {
     const auto& pose = pose_list.at(pose_index);
     auto& observation_list = observation_lists.at(pose_index);
-    for (size_t grid_index = 0; grid_index < grid_map.size(); ++grid_index) {
-      if (!grid_map.at(grid_index)) continue;
-
-      const Position local_position = grid_index * parameters.resolution - pose;
-      if (local_position < observation_range[0] ||
-          local_position > observation_range[1])
-        continue;
+    for (double local_position = observation_range[0];
+         local_position <= observation_range[1]; local_position += 0.01) {
+      const double world_position = local_position + pose;
+      const auto grid_index =
+          ComputeGridMapIndex(world_position, parameters.resolution);
+      if (grid_index < 0 || grid_index >= grid_map.size()) continue;
+      if (grid_map.at(grid_index) == 0) continue;
       observation_list.push_back(local_position);
     }
   }
@@ -190,7 +190,7 @@ double EvaluateParticle(const Particle& particle,
   }
   if (count < parameters.min_count) return 0.0;
   // total_score /= static_cast<double>(count);
-  total_score /= static_cast<double>(100);
+  total_score /= static_cast<double>(200);
   return total_score;
 }
 
@@ -250,7 +250,7 @@ Pose Localize(const GridMap& grid_map,
 
     DrawParticles(*particle_list, estimated_pose, grid_map, &image);
 
-    if (std::abs(previous_estimated_pose - estimated_pose) < 1e-5) break;
+    if (std::abs(previous_estimated_pose - estimated_pose) < 1e-6) break;
     previous_estimated_pose = estimated_pose;
   }
   return estimated_pose;
